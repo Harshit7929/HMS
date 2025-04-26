@@ -1,0 +1,114 @@
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+write the code
+ask student preferences, hostel, ac , non ac, type of sharing , and show the available rooms accordingly
+the form should ask hostel choice for female Narmadha and krishna and for male ganga and vedavathi;
+Narmadha and Krishna , Ganga and Vedavathi of 3 flooors, 
+each floor consists of 12 rooms, 
+
+first 2(1,2) rooms are 2 sharing ac ,
+next 2(3,4) rooms 3 sharing ac, 
+next 2(5,6) rooms 4 sharing ac,
+
+next 2(7,8) rooms 2 sharing non ac, 
+next 2(9,10) rooms 3 sharing non ac, 
+next 2(11,12) rooms 4 sharing non ac;
+
+data:
+if the floor number is 1 the room number should start start from 101 to 112;
+if the floor number is 2 the room number should start start from 201 to 212;
+if the floor number is 3 the room number should start start from 301 to 312;
+
+if the student is male show booking in ganga and vedhavathi and if the student is girl show bookings in Narmadha and krishna, 
+select room number number according to student, 
+1st ask hostel which the student wanted to stay
+2d ask the room type ac or non ac
+3rd ask the sharing capacity like 2 sharing, 3 sharing and 4 sharing
+show the available rooms as per room preferences and a book room button
+
+
+in a 2 sharing room the number of available beds are 2, in a 3 sharing room the number of available beds are 3 ,
+in a 4 sharing room the number of available beds are 4
+if suppose the student booked a 2 sharing room then the number of beds available is 1, cause one is booked by student,but still the status of the room is available 
+as there is still a bed available, if another student booked the same room then the number of bed available becomes zero,
+then the room status should be occupied
+
+a student can book a room only once so if the student has already booked the room showe the message
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+data:
+if the floor number is 1 the room number should start start from 101 to 112;
+if the floor number is 2 the room number should start start from 201 to 212;
+if the floor number is 3 the room number should start start from 301 to 312;
+
+
+if the floor number is 4 the room number should start start from 401 to 412;
+if the floor number is 5 the room number should start start from 501 to 512;
+if the floor number is 6 the room number should start start from 601 to 612;
+if the floor number is 7 the room number should start start from 701 to 712;
+if the floor number is 8 the room number should start start from 801 to 812;
+if the floor number is 9 the room number should start start from 901 to 912;
+if the floor number is 10 the room number should start start from 1001 to 1012;
+if the floor number is 11 the room number should start start from 1101 to 1112;
+if the floor number is 12 the room number should start start from 1201 to 1212;
+if the floor number is 13 the room number should start start from 1301 to 1312;
+if the floor number is 14 the room number should start start from 1401 to 1412;
+if the floor number is 15 the room number should start start from 1501 to 1512;
+
+
+
+
+hostel management system admin(login, admin access log, student access log, student registration, manage students, student attendance,
+ complaints, add notices, manage mess and feedback, manage rooms, room operations, room statistics, outpass management,
+  guest registration - allocate rooms , academic events, fee collection, due payments, payment history, generate invoice, fee structure,
+   payment queries, manages staff, staff access log)
+
+student(register, login, profils, change/forget password, book room , room details, room service, mess schedule, feedback , 
+attendance history, apply outpass, pay fees, payment details, fee due , payment query, file complaint, laundry service,
+ academic events, latest notices)
+
+staff(login, warden, laundry staff, other staff mark attendance, solve complaints, room services, etc
+
+
+Admin-Related Tables
+•	admin
+•	admin_log
+•	rooms
+•	notices
+•	academic_events
+•	fee_structure
+Student-Related Tables
+•	student_signup
+•	student_details
+•	room_bookings
+•	student_attendance
+•	outpass
+•	login_details
+•	complaints
+•	complaint_responses
+•	mess_feedback
+•	room_service_requests
+•	laundry_bookings
+•	laundry_booking_items
+•	student_laundry_quota
+•	account
+•	fee_dues
+•	queries
+•	query_responses
+Guest-Related Tables
+•	guest_signup
+•	guest_bookings
+•	email_queue
+•	payment_details
+Staff-Related Tables
+•	staff
+•	staff_login
+•	mess_menu
+•	laundry_items
+
+
+
+--------------------------------------------------
+
+outpass rejection duplicates, home page bootstrap, progile page, admin student registration

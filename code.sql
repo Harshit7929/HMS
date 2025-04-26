@@ -1,0 +1,607 @@
+CREATE DATABASE IF NOT EXISTS manage_hostel;
+USE manage_hostel; 
+CREATE TABLE IF NOT EXISTS student_signup (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    regNo VARCHAR(50) UNIQUE NOT NULL,
+    firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
+    dob DATE NOT NULL,
+    gender ENUM('Male', 'Female', 'Other') NOT NULL,
+    nationality VARCHAR(50) DEFAULT 'Indian', 
+    contact VARCHAR(15) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    password_updated_date TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP 
+);
+CREATE TABLE student_details (
+    reg_no VARCHAR(50) COLLATE utf8mb4_general_ci NOT NULL PRIMARY KEY,
+    emergency_phone VARCHAR(15) COLLATE utf8mb4_general_ci DEFAULT NULL,
+    course VARCHAR(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+    address TEXT COLLATE utf8mb4_general_ci DEFAULT NULL,
+    profile_picture VARCHAR(255) COLLATE utf8mb4_general_ci DEFAULT 'assets/default-avatar.png',
+    year_of_study ENUM('1', '2', '3', '4') COLLATE utf8mb4_general_ci DEFAULT NULL,
+    room_number VARCHAR(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+    hostel VARCHAR(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+    profile_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+CREATE TABLE rooms (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    hostel_name ENUM('Narmadha', 'Krishna', 'Ganga', 'Vedavathi', 'Yamuna') NOT NULL,
+    room_number INT NOT NULL,
+    floor INT NOT NULL CHECK (floor >= 1 AND floor <= 15),
+    is_ac BOOLEAN NOT NULL,
+    sharing_type ENUM('Single', '2-sharing', '3-sharing', '4-sharing') NOT NULL,
+    available_beds INT NOT NULL CHECK (available_beds >= 0),
+    status ENUM('Available', 'Occupied', 'Under Maintenance') DEFAULT 'Available',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_room (hostel_name, room_number)
+);
+CREATE TABLE room_bookings (
+    id INT AUTO_INCREMENT PRIMARY KEY, 
+    user_email VARCHAR(255) NOT NULL,
+    hostel_name VARCHAR(100) NOT NULL,
+    room_number INT NOT NULL,
+    floor INT NOT NULL,
+    is_ac BOOLEAN NOT NULL,
+    sharing_type ENUM('2-sharing', '3-sharing', '4-sharing') NOT NULL,
+    stay_period INT NOT NULL,
+    total_fee DECIMAL(10, 2) NOT NULL,
+    booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('pending', 'confirmed', 'cancelled') NOT NULL DEFAULT 'pending',
+    FOREIGN KEY (user_email) REFERENCES student_signup(email) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS student_attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    serial_number VARCHAR(50) NOT NULL,
+    regNo VARCHAR(50) NOT NULL,
+    student_name VARCHAR(200) NOT NULL,
+    hostel_name VARCHAR(100) NOT NULL,
+    room_number INT NOT NULL,
+    attendance_date DATE NOT NULL,
+    attendance_day VARCHAR(20) NOT NULL, 
+    attendance_time TIME NOT NULL,
+    status ENUM('Present', 'Absent') NOT NULL,
+    marked_by VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (regNo) REFERENCES student_signup(regNo),
+    INDEX idx_attendance_date (attendance_date),
+    INDEX idx_regno (regNo)
+); 
+CREATE TABLE IF NOT EXISTS outpass (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_reg_no VARCHAR(50) NOT NULL,
+    outpass_type ENUM('General', 'Home') NOT NULL,
+    out_time TIME NOT NULL,
+    in_time TIME NOT NULL,
+    out_date DATE NOT NULL,
+    in_date DATE NOT NULL,
+    reason TEXT NOT NULL,
+    destination VARCHAR(255) NOT NULL,
+    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    approved_by VARCHAR(50) DEFAULT NULL,
+    approval_date TIMESTAMP NULL,
+    FOREIGN KEY (student_reg_no) REFERENCES student_signup(regNo) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS login_details (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_email VARCHAR(255) NOT NULL,
+    ip_address VARCHAR(45),
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    logout_time TIMESTAMP NULL DEFAULT NULL,
+    login_status ENUM('success', 'failed') DEFAULT 'success',
+    FOREIGN KEY (student_email) REFERENCES student_signup(email) ON DELETE CASCADE,
+    INDEX idx_student_email (student_email),
+    INDEX idx_login_time (login_time)
+);
+CREATE TABLE IF NOT EXISTS admin (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    password_updated_date TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP
+);
+INSERT INTO admin (username, email, password, registration_date) 
+VALUES ('harshit', 'gvn@gmail.com', SHA2('2005', 256), NOW())
+ON DUPLICATE KEY UPDATE username=username;
+CREATE TABLE admin_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    browser VARCHAR(100) NOT NULL,
+    browser_version VARCHAR(50) NOT NULL,
+    device_type VARCHAR(100) NOT NULL,
+    session_id VARCHAR(255) NOT NULL,
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    logout_time TIMESTAMP NULL DEFAULT NULL,
+    login_status ENUM('Success', 'Failure') NOT NULL,
+    failure_reason VARCHAR(255) DEFAULT NULL,
+    FOREIGN KEY (admin_id) REFERENCES admin(id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS complaints (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    description  TEXT NOT NULL,
+    status ENUM('pending', 'in_progress', 'resolved', 'closed') DEFAULT 'pending',
+    priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+    category VARCHAR(100) NOT NULL,
+    assigned_to VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX (student_email),
+    INDEX (status),
+    INDEX (priority)
+);
+CREATE TABLE IF NOT EXISTS complaint_responses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    complaint_id INT NOT NULL,
+    responder_email VARCHAR(255) NOT NULL,
+    response TEXT NOT NULL,
+    action VARCHAR(255) NOT NULL DEFAULT 'Response Added',
+    performed_by VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (complaint_id) REFERENCES complaints(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE TABLE notices (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    date_posted TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE academic_events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_name VARCHAR(255) NOT NULL,
+    event_date DATE NOT NULL,
+    academic_year VARCHAR(10) NOT NULL
+);
+INSERT INTO rooms (hostel_name, room_number, floor, is_ac, sharing_type, available_beds, status) VALUES
+('Vedavathi', '101', 1, TRUE, '2-sharing', 2, 'Available'),
+('Vedavathi', '102', 1, TRUE, '2-sharing', 2, 'Available'),
+('Vedavathi', '103', 1, TRUE, '3-sharing', 3, 'Available'),
+('Vedavathi', '104', 1, TRUE, '3-sharing', 3, 'Available'),
+('Vedavathi', '105', 1, TRUE, '4-sharing', 4, 'Available'),
+('Vedavathi', '106', 1, TRUE, '4-sharing', 4, 'Available'),
+('Vedavathi', '107', 1, FALSE, '2-sharing', 2, 'Available'),
+('Vedavathi', '108', 1, FALSE, '2-sharing', 2, 'Available'),
+('Vedavathi', '109', 1, FALSE, '3-sharing', 3, 'Available'),
+('Vedavathi', '110', 1, FALSE, '3-sharing', 3, 'Available'),
+('Vedavathi', '111', 1, FALSE, '4-sharing', 4, 'Available'),
+('Vedavathi', '112', 1, FALSE, '4-sharing', 4, 'Available'),
+('Vedavathi', '201', 2, TRUE, '2-sharing', 2, 'Available'),
+('Vedavathi', '202', 2, TRUE, '2-sharing', 2, 'Available'),
+('Vedavathi', '203', 2, TRUE, '3-sharing', 3, 'Available'),
+('Vedavathi', '204', 2, TRUE, '3-sharing', 3, 'Available'),
+('Vedavathi', '205', 2, TRUE, '4-sharing', 4, 'Available'),
+('Vedavathi', '206', 2, TRUE, '4-sharing', 4, 'Available'),
+
+('Vedavathi', '207', 2, FALSE, '2-sharing', 2, 'Available'),
+('Vedavathi', '208', 2, FALSE, '2-sharing', 2, 'Available'),
+('Vedavathi', '209', 2, FALSE, '3-sharing', 3, 'Available'),
+('Vedavathi', '210', 2, FALSE, '3-sharing', 3, 'Available'),
+('Vedavathi', '211', 2, FALSE, '4-sharing', 4, 'Available'),
+('Vedavathi', '212', 2, FALSE, '4-sharing', 4, 'Available'),
+('Vedavathi', '301', 3, TRUE, '2-sharing', 2, 'Available'),
+('Vedavathi', '302', 3, TRUE, '2-sharing', 2, 'Available'),
+('Vedavathi', '303', 3, TRUE, '3-sharing', 3, 'Available'),
+('Vedavathi', '304', 3, TRUE, '3-sharing', 3, 'Available'),
+('Vedavathi', '305', 3, TRUE, '4-sharing', 4, 'Available'),
+('Vedavathi', '306', 3, TRUE, '4-sharing', 4, 'Available'),
+('Vedavathi', '307', 3, FALSE, '2-sharing', 2, 'Available'),
+('Vedavathi', '308', 3, FALSE, '2-sharing', 2, 'Available'),
+('Vedavathi', '309', 3, FALSE, '3-sharing', 3, 'Available'),
+('Vedavathi', '310', 3, FALSE, '3-sharing', 3, 'Available'),
+('Vedavathi', '311', 3, FALSE, '4-sharing', 4, 'Available'),
+('Vedavathi', '312', 3, FALSE, '4-sharing', 4, 'Available');
+INSERT INTO rooms (hostel_name, room_number, floor, is_ac, sharing_type, available_beds, status) VALUES
+('Ganga', '101', 1, TRUE, '2-sharing', 2, 'Available'),
+('Ganga', '102', 1, TRUE, '2-sharing', 2, 'Available'),
+('Ganga', '103', 1, TRUE, '3-sharing', 3, 'Available'),
+('Ganga', '104', 1, TRUE, '3-sharing', 3, 'Available'),
+('Ganga', '105', 1, TRUE, '4-sharing', 4, 'Available'),
+('Ganga', '106', 1, TRUE, '4-sharing', 4, 'Available'),
+('Ganga', '107', 1, FALSE, '2-sharing', 2, 'Available'),
+('Ganga', '108', 1, FALSE, '2-sharing', 2, 'Available'),
+('Ganga', '109', 1, FALSE, '3-sharing', 3, 'Available'),
+('Ganga', '110', 1, FALSE, '3-sharing', 3, 'Available'),
+('Ganga', '111', 1, FALSE, '4-sharing', 4, 'Available'),
+('Ganga', '112', 1, FALSE, '4-sharing', 4, 'Available'),
+('Ganga', '201', 2, TRUE, '2-sharing', 2, 'Available'),
+('Ganga', '202', 2, TRUE, '2-sharing', 2, 'Available'),
+('Ganga', '203', 2, TRUE, '3-sharing', 3, 'Available'),
+('Ganga', '204', 2, TRUE, '3-sharing', 3, 'Available'),
+('Ganga', '205', 2, TRUE, '4-sharing', 4, 'Available'),
+('Ganga', '206', 2, TRUE, '4-sharing', 4, 'Available'),
+('Ganga', '207', 2, FALSE, '2-sharing', 2, 'Available'),
+('Ganga', '208', 2, FALSE, '2-sharing', 2, 'Available'),
+('Ganga', '209', 2, FALSE, '3-sharing', 3, 'Available'),
+('Ganga', '210', 2, FALSE, '3-sharing', 3, 'Available'),
+('Ganga', '211', 2, FALSE, '4-sharing', 4, 'Available'),
+('Ganga', '212', 2, FALSE, '4-sharing', 4, 'Available'),
+('Ganga', '301', 3, TRUE, '2-sharing', 2, 'Available'),
+('Ganga', '302', 3, TRUE, '2-sharing', 2, 'Available'),
+('Ganga', '303', 3, TRUE, '3-sharing', 3, 'Available'),
+('Ganga', '304', 3, TRUE, '3-sharing', 3, 'Available'),
+('Ganga', '305', 3, TRUE, '4-sharing', 4, 'Available'),
+('Ganga', '306', 3, TRUE, '4-sharing', 4, 'Available'),
+('Ganga', '307', 3, FALSE, '2-sharing', 2, 'Available'),
+('Ganga', '308', 3, FALSE, '2-sharing', 2, 'Available'),
+('Ganga', '309', 3, FALSE, '3-sharing', 3, 'Available'),
+('Ganga', '310', 3, FALSE, '3-sharing', 3, 'Available'),
+('Ganga', '311', 3, FALSE, '4-sharing', 4, 'Available'),
+('Ganga', '312', 3, FALSE, '4-sharing', 4, 'Available');
+INSERT INTO rooms (hostel_name, room_number, floor, is_ac, sharing_type, available_beds, status) VALUES
+('Krishna', '101', 1, TRUE, '2-sharing', 2, 'Available'),
+('Krishna', '102', 1, TRUE, '2-sharing', 2, 'Available'),
+('Krishna', '103', 1, TRUE, '3-sharing', 3, 'Available'),
+('Krishna', '104', 1, TRUE, '3-sharing', 3, 'Available'),
+('Krishna', '105', 1, TRUE, '4-sharing', 4, 'Available'),
+('Krishna', '106', 1, TRUE, '4-sharing', 4, 'Available'),
+('Krishna', '107', 1, FALSE, '2-sharing', 2, 'Available'),
+('Krishna', '108', 1, FALSE, '2-sharing', 2, 'Available'),
+('Krishna', '109', 1, FALSE, '3-sharing', 3, 'Available'),
+('Krishna', '110', 1, FALSE, '3-sharing', 3, 'Available'),
+('Krishna', '111', 1, FALSE, '4-sharing', 4, 'Available'),
+('Krishna', '112', 1, FALSE, '4-sharing', 4, 'Available'),
+('Krishna', '201', 2, TRUE, '2-sharing', 2, 'Available'),
+('Krishna', '202', 2, TRUE, '2-sharing', 2, 'Available'),
+('Krishna', '203', 2, TRUE, '3-sharing', 3, 'Available'),
+('Krishna', '204', 2, TRUE, '3-sharing', 3, 'Available'),
+('Krishna', '205', 2, TRUE, '4-sharing', 4, 'Available'),
+('Krishna', '206', 2, TRUE, '4-sharing', 4, 'Available'),
+('Krishna', '207', 2, FALSE, '2-sharing', 2, 'Available'),
+('Krishna', '208', 2, FALSE, '2-sharing', 2, 'Available'),
+('Krishna', '209', 2, FALSE, '3-sharing', 3, 'Available'),
+('Krishna', '210', 2, FALSE, '3-sharing', 3, 'Available'),
+('Krishna', '211', 2, FALSE, '4-sharing', 4, 'Available'),
+('Krishna', '212', 2, FALSE, '4-sharing', 4, 'Available'),
+('Krishna', '301', 3, TRUE, '2-sharing', 2, 'Available'),
+('Krishna', '302', 3, TRUE, '2-sharing', 2, 'Available'),
+('Krishna', '303', 3, TRUE, '3-sharing', 3, 'Available'),
+('Krishna', '304', 3, TRUE, '3-sharing', 3, 'Available'),
+('Krishna', '305', 3, TRUE, '4-sharing', 4, 'Available'),
+('Krishna', '306', 3, TRUE, '4-sharing', 4, 'Available'),
+('Krishna', '307', 3, FALSE, '2-sharing', 2, 'Available'),
+('Krishna', '308', 3, FALSE, '2-sharing', 2, 'Available'),
+('Krishna', '309', 3, FALSE, '3-sharing', 3, 'Available'),
+('Krishna', '310', 3, FALSE, '3-sharing', 3, 'Available'),
+('Krishna', '311', 3, FALSE, '4-sharing', 4, 'Available'),
+('Krishna', '312', 3, FALSE, '4-sharing', 4, 'Available');
+INSERT INTO rooms (hostel_name, room_number, floor, is_ac, sharing_type, available_beds, status) VALUES
+('Narmadha', '101', 1, TRUE, '2-sharing', 2, 'Available'),
+('Narmadha', '102', 1, TRUE, '2-sharing', 2, 'Available'),
+('Narmadha', '103', 1, TRUE, '3-sharing', 3, 'Available'),
+('Narmadha', '104', 1, TRUE, '3-sharing', 3, 'Available'),
+('Narmadha', '105', 1, TRUE, '4-sharing', 4, 'Available'),
+('Narmadha', '106', 1, TRUE, '4-sharing', 4, 'Available'),
+('Narmadha', '107', 1, FALSE, '2-sharing', 2, 'Available'),
+('Narmadha', '108', 1, FALSE, '2-sharing', 2, 'Available'),
+('Narmadha', '109', 1, FALSE, '3-sharing', 3, 'Available'),
+('Narmadha', '110', 1, FALSE, '3-sharing', 3, 'Available'),
+('Narmadha', '111', 1, FALSE, '4-sharing', 4, 'Available'),
+('Narmadha', '112', 1, FALSE, '4-sharing', 4, 'Available'),
+('Narmadha', '201', 2, TRUE, '2-sharing', 2, 'Available'),
+('Narmadha', '202', 2, TRUE, '2-sharing', 2, 'Available'),
+('Narmadha', '203', 2, TRUE, '3-sharing', 3, 'Available'),
+('Narmadha', '204', 2, TRUE, '3-sharing', 3, 'Available'),
+('Narmadha', '205', 2, TRUE, '4-sharing', 4, 'Available'),
+('Narmadha', '206', 2, TRUE, '4-sharing', 4, 'Available'),
+('Narmadha', '207', 2, FALSE, '2-sharing', 2, 'Available'),
+('Narmadha', '208', 2, FALSE, '2-sharing', 2, 'Available'),
+('Narmadha', '209', 2, FALSE, '3-sharing', 3, 'Available'),
+('Narmadha', '210', 2, FALSE, '3-sharing', 3, 'Available'),
+('Narmadha', '211', 2, FALSE, '4-sharing', 4, 'Available'),
+('Narmadha', '212', 2, FALSE, '4-sharing', 4, 'Available'),
+('Narmadha', '301', 3, TRUE, '2-sharing', 2, 'Available'),
+('Narmadha', '302', 3, TRUE, '2-sharing', 2, 'Available'),
+('Narmadha', '303', 3, TRUE, '3-sharing', 3, 'Available'),
+('Narmadha', '304', 3, TRUE, '3-sharing', 3, 'Available'),
+('Narmadha', '305', 3, TRUE, '4-sharing', 4, 'Available'),
+('Narmadha', '306', 3, TRUE, '4-sharing', 4, 'Available'),
+('Narmadha', '307', 3, FALSE, '2-sharing', 2, 'Available'),
+('Narmadha', '308', 3, FALSE, '2-sharing', 2, 'Available'),
+('Narmadha', '309', 3, FALSE, '3-sharing', 3, 'Available'),
+('Narmadha', '310', 3, FALSE, '3-sharing', 3, 'Available'),
+('Narmadha', '311', 3, FALSE, '4-sharing', 4, 'Available'),
+('Narmadha', '312', 3, FALSE, '4-sharing', 4, 'Available');
+INSERT INTO rooms (hostel_name, room_number, floor, is_ac, sharing_type, available_beds, status) VALUES
+('Yamuna', '101', 1, TRUE, 'Single', 1, 'Available'),
+('Yamuna', '102', 1, TRUE, '2-sharing', 2, 'Available'),
+('Yamuna', '103', 1, TRUE, '3-sharing', 3, 'Available'),
+('Yamuna', '104', 1, TRUE, '4-sharing', 4, 'Available'),
+('Yamuna', '201', 2, TRUE, 'Single', 1, 'Available'),
+('Yamuna', '202', 2, TRUE, '2-sharing', 2, 'Available'),
+('Yamuna', '203', 2, TRUE, '3-sharing', 3, 'Available'),
+('Yamuna', '204', 2, TRUE, '4-sharing', 4, 'Available'),
+('Yamuna', '301', 3, TRUE, 'Single', 1, 'Available'),
+('Yamuna', '302', 3, TRUE, '2-sharing', 2, 'Available'),
+('Yamuna', '303', 3, TRUE, '3-sharing', 3, 'Available'),
+('Yamuna', '304', 3, TRUE, '4-sharing', 4, 'Available'),
+('Yamuna', '401', 4, TRUE, 'Single', 1, 'Available'),
+('Yamuna', '402', 4, TRUE, '2-sharing', 2, 'Available'),
+('Yamuna', '403', 4, TRUE, '3-sharing', 3, 'Available'),
+('Yamuna', '404', 4, TRUE, '4-sharing', 4, 'Available'),
+('Yamuna', '501', 5, TRUE, 'Single', 1, 'Available'),
+('Yamuna', '502', 5, TRUE, '2-sharing', 2, 'Available'),
+('Yamuna', '503', 5, TRUE, '3-sharing', 3, 'Available'),
+('Yamuna', '504', 5, TRUE, '4-sharing', 4, 'Available');
+CREATE TABLE IF NOT EXISTS staff (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    staff_id VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    position VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    password VARCHAR(50) NOT NULL,  
+    hostel VARCHAR(50) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO staff (email, staff_id, name, position, department, hostel, password) VALUES
+('warden_vedavathi@example.com', 'STF001', 'Vishnu', 'Warden', 'Administration', 'Vedavathi', 'warden123'),
+('warden_ganga@example.com', 'STF002', 'Shanmukha', 'Warden', 'Administration', 'Ganga', 'warden456'),
+('warden_narmadha@example.com', 'STF003', 'Bhanu', 'Warden', 'Administration', 'Narmadha', 'warden789'),
+('warden_krishna@example.com', 'STF004', 'Vaishnavi', 'Warden', 'Administration', 'Krishna', 'warden101'),
+('mess1@example.com', 'STF017', 'Ravi Yadav', 'Mess', 'Mess Services', 'Vedavathi, Ganga', 'mess123'),
+('mess2@example.com', 'STF018', 'Neha Gupta', 'Mess', 'Mess Services', 'Krishna, Narmadha', 'mess456'),
+('security1@example.com', 'STF005', 'Vikram Singh', 'Security Head', 'Security', 'Vedavathi, Ganga', 'security123'),
+('security2@example.com', 'STF006', 'Deepak Verma', 'Security Head', 'Security', 'Krishna, Narmadha', 'security456'),
+('maintenance1@example.com', 'STF007', 'Mahesh Choudhary', 'Maintenance', 'Maintenance', 'Vedavathi, Ganga', 'maintenance123'),
+('maintenance2@example.com', 'STF008', 'Sunita Rao', 'Maintenance', 'Maintenance', 'Krishna, Narmadha', 'maintenance456'),
+('electrician1@example.com', 'STF009', 'Ramesh Yadav', 'Electrician', 'Electrical', 'Vedavathi, Ganga', 'electrician123'),
+('electrician2@example.com', 'STF010', 'Deepak Verma', 'Electrician', 'Electrical', 'Krishna, Narmadha', 'electrician456'),
+('roomservice1@example.com', 'STF011', 'Kiran Desai', 'Room Service', 'Housekeeping', 'Vedavathi, Ganga', 'roomservice123'),
+('roomservice2@example.com', 'STF012', 'Manoj Sharma', 'Room Service', 'Housekeeping', 'Krishna, Narmadha', 'roomservice456'),
+('laundry1@example.com', 'STF013', 'Arun Kumar', 'Laundry', 'Laundry Services', 'Vedavathi, Ganga', 'laundry123'),
+('laundry2@example.com', 'STF014', 'Meera Joshi', 'Laundry', 'Laundry Services', 'Krishna, Narmadha', 'laundry456'),
+('plumber1@example.com', 'STF015', 'Suresh Patel', 'Plumber', 'Plumbing', 'Vedavathi, Ganga', 'plumber123'),
+('plumber2@example.com', 'STF016', 'Anil Kumar', 'Plumber', 'Plumbing', 'Krishna, Narmadha', 'plumber456');
+CREATE TABLE IF NOT EXISTS staff_login (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_email VARCHAR(255) NOT NULL,
+    staff_id VARCHAR(50) NOT NULL,
+    position VARCHAR(100) NOT NULL, 
+    hostel VARCHAR(50) DEFAULT NULL, 
+    ip_address VARCHAR(45) NOT NULL,
+    login_status ENUM('success', 'failed') NOT NULL,
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (staff_email) REFERENCES staff(email) ON DELETE CASCADE,
+    FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS `mess_menu` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `day_order` INT(1) NOT NULL,
+  `day_name` VARCHAR(10) NOT NULL,
+  `cuisine_type` ENUM('Indian','International') NOT NULL,
+  `breakfast` TEXT NOT NULL,
+  `lunch` TEXT NOT NULL,
+  `snacks` TEXT NOT NULL,
+  `dinner` TEXT NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `cuisine_day_idx` (`cuisine_type`, `day_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `mess_menu` (`day_order`, `day_name`, `cuisine_type`, `breakfast`, `lunch`, `snacks`, `dinner`) VALUES
+(1, 'Monday', 'Indian', 'Idli, Sambar, Coconut Chutney, Tea/Coffee', 'Rice, Dal, Mixed Vegetable Curry, Roti, Curd, Pickle', 'Vada, Tea/Coffee', 'Rice, Chapati, Dal Fry, Paneer Butter Masala, Salad'),
+(2, 'Tuesday', 'Indian', 'Poha, Boiled Eggs/Sprouts, Tea/Coffee', 'Rice, Rajma, Aloo Gobi, Roti, Papad, Curd', 'Samosa, Tea/Coffee', 'Rice, Chapati, Dal Tadka, Chicken Curry/Soya Chunks Curry, Raita'),
+(3, 'Wednesday', 'Indian', 'Upma, Banana, Tea/Coffee', 'Rice, Dal, Bhindi Fry, Roti, Curd, Pickle', 'Bread Pakora, Tea/Coffee', 'Rice, Chapati, Chana Masala, Mixed Vegetable, Salad'),
+(4, 'Thursday', 'Indian', 'Puri, Aloo Sabzi, Tea/Coffee', 'Rice, Kadhi, Aloo Matar, Roti, Papad, Curd', 'Kachori, Tea/Coffee', 'Rice, Chapati, Dal Makhani, Fish Curry/Paneer Curry, Salad'),
+(5, 'Friday', 'Indian', 'Dosa, Sambar, Coconut Chutney, Tea/Coffee', 'Rice, Dal, Baingan Bharta, Roti, Curd, Pickle', 'Aloo Bonda, Tea/Coffee', 'Rice, Puri, Chole, Raita, Sweet'),
+(6, 'Saturday', 'Indian', 'Paratha, Curd, Pickle, Tea/Coffee', 'Rice, Dal, Mix Veg, Roti, Curd, Papad', 'Cutlet, Tea/Coffee', 'Rice, Chapati, Dal Tadka, Egg Curry/Matar Paneer, Salad'),
+(7, 'Sunday', 'Indian', 'Chole Bhature, Tea/Coffee', 'Pulao, Raita, Shahi Paneer, Roti, Sweet', 'Pav Bhaji, Tea/Coffee', 'Rice, Chapati, Dal, Mutton Curry/Malai Kofta, Salad');
+INSERT INTO `mess_menu` (`day_order`, `day_name`, `cuisine_type`, `breakfast`, `lunch`, `snacks`, `dinner`) VALUES
+(1, 'Monday', 'International', 'Cereal with Milk, Toast, Eggs, Coffee/Tea', 'Pasta with Marinara Sauce, Garden Salad, Garlic Bread', 'Muffins, Coffee/Tea', 'Grilled Chicken, Mashed Potatoes, Steamed Vegetables'),
+(2, 'Tuesday', 'International', 'Pancakes, Maple Syrup, Fruit Salad, Coffee/Tea', 'Beef/Vegetable Burgers, French Fries, Coleslaw', 'Cookies, Coffee/Tea', 'Baked Fish, Rice Pilaf, Roasted Vegetables, Soup'),
+(3, 'Wednesday', 'International', 'Croissants, Jam, Butter, Yogurt, Coffee/Tea', 'Tacos, Mexican Rice, Refried Beans, Corn Chips', 'Fruit Tarts, Coffee/Tea', 'Stir-fried Noodles with Tofu/Chicken, Spring Rolls'),
+(4, 'Thursday', 'International', 'Waffles, Fruit Compote, Bacon, Coffee/Tea', 'Mediterranean Platter (Hummus, Falafel, Pita), Greek Salad', 'Cheese and Crackers, Coffee/Tea', 'Lasagna, Garlic Bread, Caesar Salad'),
+(5, 'Friday', 'International', 'Oatmeal, Mixed Berries, Toast, Coffee/Tea', 'Sushi (Vegetarian/Non-Vegetarian), Miso Soup, Salad', 'Banana Bread, Coffee/Tea', 'BBQ Chicken/Tofu, Corn on the Cob, Potato Wedges, Coleslaw'),
+(6, 'Saturday', 'International', 'English Breakfast (Eggs, Beans, Sausage, Toast), Coffee/Tea', 'Pizza (Assorted Toppings), Garden Salad, Breadsticks', 'Brownies, Coffee/Tea', 'Thai Curry with Rice, Vegetable Spring Rolls, Fruit Salad'),
+(7, 'Sunday', 'International', 'Bagels, Cream Cheese, Smoked Salmon, Coffee/Tea', 'Sunday Roast (Chicken/Vegetable), Roasted Potatoes, Steamed Vegetables, Gravy', 'Scones with Jam and Cream, Coffee/Tea', 'Pasta Carbonara/Primavera, Garlic Bread, Tiramisu');
+CREATE TABLE IF NOT EXISTS `mess_feedback` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `regNo` VARCHAR(50) NOT NULL,
+  `feedback_date` DATE NOT NULL,
+  `meal_type` ENUM('Breakfast', 'Lunch', 'Snacks', 'Dinner') NOT NULL,
+  `feedback` TEXT NOT NULL,
+  `rating` INT(1) NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `regNo_idx` (`regNo`),
+  CONSTRAINT `fk_student_feedback` FOREIGN KEY (`regNo`) REFERENCES `student_signup` (`regNo`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS room_service_requests (
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+    reg_no VARCHAR(50) NOT NULL,
+    service_type VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    room_number VARCHAR(20) NOT NULL,
+    request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('pending', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
+    assigned_to VARCHAR(50) DEFAULT NULL,
+    completion_date TIMESTAMP NULL,
+    feedback TEXT DEFAULT NULL,
+    FOREIGN KEY (reg_no) REFERENCES student_signup(regNo) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_to) REFERENCES staff(staff_id) ON DELETE SET NULL
+);
+CREATE TABLE IF NOT EXISTS `laundry_items` (
+  `item_id` int(11) NOT NULL AUTO_INCREMENT,
+  `item_name` varchar(100) NOT NULL,
+  `weight_grams` int(11) NOT NULL,
+  PRIMARY KEY (`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `laundry_items` (`item_name`, `weight_grams`) VALUES 
+('Shirt', 300),  
+('T-Shirt', 250), 
+('Pants', 500), 
+('Jeans', 700), 
+('Shorts', 300), 
+('Underwear', 100), 
+('Socks (pair)', 100), 
+('Towel', 500), 
+('Bed Sheet', 800), 
+('Pillow Cover', 200), 
+('Sweater', 600), 
+('Jacket', 800), 
+('Dress', 450), 
+('Skirt', 350), 
+('Hoodie', 550);
+CREATE TABLE IF NOT EXISTS `laundry_bookings` (
+  `booking_id` int(11) NOT NULL AUTO_INCREMENT,
+  `regNo` varchar(50) NOT NULL,
+  `booking_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `pickup_date` date NOT NULL,
+  `status` enum('Pending','Processing','Completed','Cancelled') NOT NULL DEFAULT 'Pending',
+  `total_weight_grams` int(11) NOT NULL,
+  `notes` text,
+  `academic_year` varchar(9) NOT NULL,
+  `hostel` VARCHAR(50) NOT NULL,
+  `staff_incharge_id` VARCHAR(50) NULL,
+  PRIMARY KEY (`booking_id`),
+  KEY `regNo` (`regNo`),
+  INDEX `idx_hostel` (`hostel`),
+  INDEX `idx_staff_incharge` (`staff_incharge_id`),
+  CONSTRAINT `fk_student_regNo` FOREIGN KEY (`regNo`) REFERENCES `student_signup` (`regNo`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_staff_incharge` FOREIGN KEY (`staff_incharge_id`) REFERENCES `staff`(`staff_id`) ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS `laundry_booking_items` (
+  `booking_item_id` int(11) NOT NULL AUTO_INCREMENT,
+  `booking_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  PRIMARY KEY (`booking_item_id`), 
+  KEY `booking_id` (`booking_id`),
+  KEY `item_id` (`item_id`),
+  CONSTRAINT `fk_booking_id` FOREIGN KEY (`booking_id`) REFERENCES `laundry_bookings` (`booking_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_item_id` FOREIGN KEY (`item_id`) REFERENCES `laundry_items` (`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS `student_laundry_quota` (
+  `regNo` varchar(50) NOT NULL,
+  `academic_year` varchar(9) NOT NULL,
+  `bookings_used` int(11) NOT NULL DEFAULT 0,
+  `max_bookings` int(11) NOT NULL DEFAULT 50,
+  PRIMARY KEY (`regNo`, `academic_year`),
+  CONSTRAINT `fk_quota_regNo` FOREIGN KEY (`regNo`) REFERENCES `student_signup` (`regNo`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS guest_signup (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+    signup_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS guest_bookings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guest_name VARCHAR(200) NOT NULL,
+    guest_email VARCHAR(255) NOT NULL,
+    guest_phone VARCHAR(15) NOT NULL,
+    room_type ENUM('single', 'double', 'triple', 'four_bed') NOT NULL,
+    stay_days INT NOT NULL,
+    check_in_date DATE NOT NULL,
+    mess_opted BOOLEAN DEFAULT 0,
+    special_requests TEXT,
+    room_number VARCHAR(10) DEFAULT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE email_queue(
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `booking_id` int(11) NOT NULL,
+  `recipient_email` varchar(255) NOT NULL,
+  `recipient_name` varchar(255) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `status` enum('pending','sent','failed') DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `sent_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `payment_details` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_email` varchar(255) NOT NULL,
+  `booking_id` int(11) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `payment_method` varchar(50) NOT NULL,
+  `payment_status` varchar(50) NOT NULL,
+  `transaction_id` varchar(50) NOT NULL,
+  `card_number` varchar(20) DEFAULT NULL,
+  `card_expiry` varchar(5) DEFAULT NULL,
+  `card_cvc` varchar(4) DEFAULT NULL,
+  `upi_id` varchar(50) DEFAULT NULL,
+  `bank_name` varchar(100) DEFAULT NULL,
+  `account_number` varchar(30) DEFAULT NULL,
+  `ifsc_code` varchar(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `booking_id` (`booking_id`),
+  KEY `user_email` (`user_email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE account (
+    account_id INT AUTO_INCREMENT PRIMARY KEY,
+    regNo VARCHAR(50) NOT NULL,
+    balance DECIMAL(15, 2) NOT NULL DEFAULT 500000,
+    FOREIGN KEY (regNo) REFERENCES student_signup(regNo)
+);
+CREATE TABLE fee_structure (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    room_type VARCHAR(50) NOT NULL,
+    sharing_type INT NOT NULL,
+    duration VARCHAR(20) NOT NULL,
+    fee DECIMAL(10, 2) NOT NULL
+);
+INSERT INTO fee_structure (room_type, sharing_type, duration, fee) VALUES
+('AC', 2, '12 months', 125000),
+('Non-AC', 2, '12 months', 85000),
+('AC', 2, '6 months', 62500),
+('Non-AC', 2, '6 months', 42500),
+('AC', 3, '12 months', 110000),
+('Non-AC', 3, '12 months', 75000),
+('AC', 3, '6 months', 55500),
+('Non-AC', 3, '6 months', 37500),
+('AC', 4, '12 months', 100000),
+('Non-AC', 4, '12 months', 65000),
+('AC', 4, '6 months', 50000),
+('Non-AC', 4, '6 months', 32500),
+('Mess', NULL, '12 months', 70000),
+('Mess', NULL, '6 months', 35000);
+CREATE TABLE fee_dues (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL,
+    user_email VARCHAR(255) NOT NULL,
+    total_fee DECIMAL(10, 2) NOT NULL,
+    amount_paid DECIMAL(10, 2) NOT NULL,
+    amount_due DECIMAL(10, 2) NOT NULL,
+    due_date DATE NOT NULL,
+    status ENUM('pending', 'paid', 'overdue') NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES room_bookings(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_email) REFERENCES student_signup(email) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS queries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    regNo VARCHAR(50) NOT NULL,
+    query TEXT NOT NULL,
+    category VARCHAR(50) DEFAULT 'general',
+    payment_ref VARCHAR(100) NULL,
+    status ENUM('pending', 'in-progress', 'resolved', 'closed') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_response_at TIMESTAMP NULL,
+    response_count INT DEFAULT 0,
+    resolved_at TIMESTAMP NULL
+);
+CREATE TABLE IF NOT EXISTS query_responses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    query_id INT NOT NULL,
+    response TEXT NOT NULL,
+    responder_type ENUM('student', 'staff') NOT NULL,
+    responder_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (query_id) REFERENCES queries(id) ON DELETE CASCADE
+);
+

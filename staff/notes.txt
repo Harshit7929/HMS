@@ -1,0 +1,9 @@
+
+if a student wants to book a service he / she gets 5 options room service maintanance electrical issue
+ plumbing issue other there are mess, security, maintanance, electritian, room service, laundry catogiries of staff 
+ write the code such that its maps the service issue like room service to room service maintanance to maintanance electrical 
+ issue to electrition plumbing issue to plumber the warden gets the service
+ request and can assign the service request to the staff of that related issue , 
+ show the staff details to assign accordingly write full code with the updated changes 
+ write full code from the begining with the updated changes dont leave any and remove monthly rent colomn in room management
+  tab and write full code

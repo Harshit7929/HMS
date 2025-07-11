@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/images/srmlogo.png" type="image/png" />
+    <title>Facilities</title>
+    <link rel="icon" type="image/png" href="http://localhost/hostel_info/images/srmlogo.png">
+    <link rel="stylesheet" href="facilities.css" />
+    <!-- Add font awesome for social media icons -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* General Styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .container {
+        width: 80%;
+        margin: 0 auto;
+      }
+
+      /* General Header Styles */
+      header {
+        background-color: #4d4d29;
+        color: #fff;
+        padding: 15px 0;
+      }
+
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-left: 30px;
+        padding-right: 20px; /* Added padding for spacing */
+      }
+
+      header .header-logo {
+        height: 50px;
+        width: auto;
+        margin-left: 10px; /* Move the logo to the right */
+      }
+
+      header h1 {
+        font-size: 2em;
+        margin-left: 20px; /* Space between the logo and title */
+      }
+
+      header nav ul {
+        list-style: none;
+        display: flex;
+        gap: 20px;
+        margin: 0;
+        padding: 0;
+      }
+
+      header nav ul li {
+        position: relative; /* Needed for dropdown positioning */
+      }
+
+      header nav ul li a {
+        color: #fff;
+        text-decoration: none;
+        font-size: 1.1em;
+        padding: 5px 10px;
+        transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+      }
+
+      header nav ul li a:hover {
+        background-color: #666;
+        color: #fff;
+        border-radius: 5px;
+      }
+
+      /* Dropdown Menu Styles */
+      header nav ul li.dropdown .dropdown-content {
+        display: none; /* Hide dropdown by default */
+        position: absolute;
+        background-color: #fff; /* White background for the dropdown */
+        padding: 10px 0;
+        list-style: none;
+        top: 100%; /* Position below the "Details" link */
+        left: 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.3s, transform 0.3s; /* Smooth transition effect */
+      }
+
+      header nav ul li.dropdown .dropdown-content li {
+        margin: 0;
+      }
+
+      header nav ul li.dropdown .dropdown-content li a {
+        display: block;
+        padding: 10px 20px;
+        font-size: 1em;
+        color: #333; /* Dark text for white background */
+        text-decoration: none;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      header nav ul li.dropdown .dropdown-content li a:hover {
+        background-color: #f0f0f0; /* Light grey on hover */
+        color: #000;
+      }
+
+      /* Show Dropdown on Hover */
+      header nav ul li.dropdown:hover .dropdown-content {
+        display: block; /* Show the dropdown when hovering on "Details" */
+        opacity: 1;
+        transform: translateY(0); /* Slide down effect */
+      }
+
+      /* Adjust Dropdown Position */
+      header nav ul {
+        list-style: none;
+        display: flex;
+        gap: 20px;
+        justify-content: flex-start; /* Aligns all items left */
+        margin: 0;
+        padding: 0;
+      }
+
+      header nav ul li:first-child {
+        margin-right: 100px; /* Pushes "Details" closer to the left */
+      }
+
+      /* Facilities Section */
+      .facilities-section {
+        padding: 40px 0;
+        background: #fff;
+      }
+
+      .facilities-section h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #34495e;
+        font-size: 2em;
+      }
+
+      .facility-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
+
+      .facility-item {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        flex: 1 1 calc(25% - 20px);
+        min-width: 250px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: transform 0.3s ease-in-out;
+      }
+
+      .facility-item:hover {
+        transform: translateY(-10px);
+      }
+
+      .facility-item h3 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-size: 1.2em;
+      }
+
+      .facility-item p {
+        font-size: 0.9em;
+        color: #555;
+      }
+
+      /* Footer Section */
+      footer {
+        background: #4d4d29;
+        color: #fff;
+        text-align: center;
+        padding: 20px 0;
+        margin-top: 40px;
+      }
+
+      footer p {
+        font-size: 1em;
+        margin: 5px 0;
+      }
+
+      footer a {
+        color: #fff;
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      /* Social Media Icons Styling */
+      .social-media {
+        margin-top: 20px;
+      }
+
+      .social-media a {
+        color: #fff;
+        margin: 0 10px;
+        font-size: 24px;
+        transition: color 0.3s ease-in-out;
+      }
+
+      .social-media a:hover {
+        color: #1abc9c; /* Change color on hover */
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-container">
+        <img
+          src="http://localhost/hostel_info/images/srmap.png"
+          alt="SRM Logo"
+          class="header-logo"
+        />
+        <h1>Hostel Details</h1>
+        <nav>
+          <ul>
+            <li class="dropdown">
+              <a href="#">Details</a>
+              <ul class="dropdown-content">
+                <li><a href="hostel_info.html">Home</a></li>
+                <li><a href="rooms.html">Rooms</a></li>
+                <li><a href="mess.html">Mess</a></li>
+                <li>
+                  <a href="http://localhost/hostel_info/index.php">Main</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <section id="facilities" class="facilities-section">
+      <div class="container">
+        <div class="facility-list">
+          <div class="facility-item">
+            <h3>Uninterrupted Power Supply</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Clean & Hygienic Domestic Water Supply</h3>
+            <p>(Clean and Hygienic RO Drinking Water)</p>
+          </div>
+          <div class="facility-item">
+            <h3>Uninterrupted Internet / WIFI</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Safe & Secure Environment</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Green Environment & Healthy Ambience</h3>
+          </div>
+          <div class="facility-item">
+            <h3>24/7 Maintenance Support</h3>
+          </div>
+          <div class="facility-item">
+            <h3>24/7 Faculty Warden / Tower Warden Availability</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Night Canteen</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Day Canteen at Different Locations</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Spacious and Furnished AC and Non-AC Rooms</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Centralized AC System (Dining Area)</h3>
+          </div>
+          <div class="facility-item">
+            <h3>24/7 Healthcare Center Facility</h3>
+            <p>(2 Doctors & 3 Nursing Staff)</p>
+          </div>
+          <div class="facility-item">
+            <h3>Pharmacy</h3>
+          </div>
+          <div class="facility-item">
+            <h3>24/7 Ambulance</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Well-Equipped Gymnasium</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Indoor Games</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Laundry</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Saloon</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Bank & 24/7 ATM</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Post Office</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Centralized Hot Water System</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Pest Control Services</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Lifts in All Blocks</h3>
+          </div>
+          <div class="facility-item">
+            <h3>Auditorium</h3>
+            <p>(1000 Seat Capacity, 70mm Screen & Bosch Audio)</p>
+          </div>
+          <div class="facility-item">
+            <h3>Fire Protection System in All Buildings</h3>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2025 Hostel Management. All Rights Reserved.</p>
+        <p>
+          Contact us: Phone: +91-863-2343000 |
+          <a href="mailto:hostels.srmap@srmap.edu.in"
+            >hostels.srmap@srmap.edu.in</a
+          >
+        </p>
+        <div class="social-media">
+          <a href="https://www.instagram.com/srmuap/" target="_blank"
+            ><i class="fab fa-instagram"></i
+          ></a>
+          <a href="https://www.facebook.com/SRMUAP/" target="_blank"
+            ><i class="fab fa-facebook-f"></i
+          ></a>
+          <a href="https://x.com/SRMUAP" target="_blank"
+            ><i class="fab fa-twitter"></i
+          ></a>
+          <a href="https://www.youtube.com/c/SRMUniversityAP" target="_blank"
+            ><i class="fab fa-youtube"></i
+          ></a>
+          <a href="https://www.linkedin.com/school/srmuap/" target="_blank"
+            ><i class="fab fa-linkedin-in"></i
+          ></a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
